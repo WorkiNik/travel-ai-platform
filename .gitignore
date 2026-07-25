@@ -1,0 +1,14 @@
+﻿__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.env.local
+node_modules/
+dist/
+build/
+.DS_Store
+.vscode/settings.json
+postgres_data/
+redis_data/
+venv/
+*.log
