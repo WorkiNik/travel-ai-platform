@@ -10,5 +10,8 @@ build/
 .vscode/settings.json
 postgres_data/
 redis_data/
+minio_data/
 venv/
 *.log
+*.pyc
+venv/
