@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { documentsApi } from '../services/api'
+import { documentsApi, extractErrorMessage } from '../services/api'
 import type { DocumentItem } from '../types'
 
 interface DocumentState {
@@ -36,7 +36,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       await get().loadDocuments()
       set({ isUploading: false })
     } catch (err: any) {
-      const message = err.response?.data?.detail || 'Не удалось загрузить документ'
+      const message = extractErrorMessage(err, 'Не удалось загрузить документ')
       set({ isUploading: false, error: message })
       throw err
     }

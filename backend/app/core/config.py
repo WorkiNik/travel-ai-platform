@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql://dev:dev123@localhost:5432/travel_ai"
 
+    # Frontend (для CORS в проде)
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
 

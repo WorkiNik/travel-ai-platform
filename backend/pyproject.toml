@@ -23,6 +23,7 @@ alembic = "^1.13.0"
 bcrypt = "^5.0.0"
 google-genai = "^2.14.0"
 pgvector = "^0.5.0"
+slowapi = "^0.1.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4"

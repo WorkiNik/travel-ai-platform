@@ -28,17 +28,27 @@ export const Chat = () => {
   const [showDocForm, setShowDocForm] = useState(false)
   const [docTitle, setDocTitle] = useState('')
   const [docContent, setDocContent] = useState('')
+  
+  // Состояния для нового модального окна
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false)
+  const [newChatTitle, setNewChatTitle] = useState('')
 
   useEffect(() => {
     loadConversations()
     loadDocuments()
   }, [])
 
-  const handleNewConversation = async () => {
-    const title = window.prompt('Название поездки (например, "Отпуск в Японии")')
-    if (!title) return
-    const id = await createConversation(title)
+  // Обновленная функция создания диалога
+  const handleNewConversationSubmit = async (e?: SyntheticEvent) => {
+    if (e) e.preventDefault()
+    if (!newChatTitle.trim()) return
+
+    const id = await createConversation(newChatTitle)
     await openConversation(id)
+    
+    // Закрываем модалку и чистим поле
+    setNewChatTitle('')
+    setIsNewChatModalOpen(false)
   }
 
   const handleSend = async (e: SyntheticEvent) => {
@@ -70,6 +80,42 @@ export const Chat = () => {
 
   return (
     <div style={styles.app}>
+      
+      {/* --- Модальное окно создания чата --- */}
+      {isNewChatModalOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h3 style={styles.modalTitle}>Новая поездка</h3>
+            <form onSubmit={handleNewConversationSubmit} style={styles.modalForm}>
+              <input 
+                autoFocus
+                type="text" 
+                value={newChatTitle}
+                onChange={(e) => setNewChatTitle(e.target.value)}
+                placeholder="Например, «Отпуск в Японии»" 
+                style={styles.modalInput}
+              />
+              <div style={styles.modalActions}>
+                <button 
+                  type="button" 
+                  onClick={() => setIsNewChatModalOpen(false)} 
+                  style={styles.modalBtnCancel}
+                >
+                  Отмена
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={!newChatTitle.trim()} 
+                  style={styles.modalBtnSubmit}
+                >
+                  Создать
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar — список рейсов/разговоров + документы */}
       <aside style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
@@ -82,7 +128,8 @@ export const Chat = () => {
           </button>
         </div>
 
-        <button onClick={handleNewConversation} style={styles.newBtn}>
+        {/* Кнопка теперь просто открывает модалку */}
+        <button onClick={() => setIsNewChatModalOpen(true)} style={styles.newBtn}>
           + Новая поездка
         </button>
 
@@ -237,7 +284,74 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     height: '100vh',
     background: 'var(--color-bg)',
+    position: 'relative', // добавлено для позиционирования модалки
   },
+  
+  // --- Стили для модального окна ---
+  modalOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 12,
+    padding: '24px',
+    width: '400px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+  },
+  modalTitle: {
+    margin: '0 0 16px 0',
+    fontFamily: 'var(--font-display)',
+    fontSize: 20,
+    color: 'var(--color-text)',
+  },
+  modalForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  modalInput: {
+    background: 'var(--color-surface-raised)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 8,
+    padding: '12px 14px',
+    color: 'var(--color-text)',
+    fontSize: 14,
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  modalActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '12px',
+  },
+  modalBtnCancel: {
+    background: 'transparent',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text-muted)',
+    borderRadius: 8,
+    padding: '8px 16px',
+    fontSize: 14,
+    cursor: 'pointer',
+  },
+  modalBtnSubmit: {
+    background: 'var(--color-accent)',
+    color: '#1a1204',
+    border: 'none',
+    borderRadius: 8,
+    padding: '8px 16px',
+    fontWeight: 600,
+    fontSize: 14,
+    cursor: 'pointer',
+  },
+  // --------------------------------
+
   sidebar: {
     width: 280,
     display: 'flex',
@@ -271,6 +385,7 @@ const styles: Record<string, CSSProperties> = {
     width: 32,
     height: 32,
     fontSize: 14,
+    cursor: 'pointer',
   },
   newBtn: {
     background: 'var(--color-surface-raised)',
@@ -280,6 +395,7 @@ const styles: Record<string, CSSProperties> = {
     padding: '10px 0',
     fontSize: 13,
     fontWeight: 600,
+    cursor: 'pointer',
   },
   convList: {
     display: 'flex',
@@ -296,6 +412,7 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 8,
     padding: '10px 12px',
     textAlign: 'left',
+    cursor: 'pointer',
   },
   convItemActive: {
     background: 'var(--color-surface-raised)',
@@ -336,6 +453,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     lineHeight: 1,
     padding: 0,
+    cursor: 'pointer',
   },
   docForm: {
     display: 'flex',
@@ -376,6 +494,7 @@ const styles: Record<string, CSSProperties> = {
     padding: '8px 0',
     fontWeight: 600,
     fontSize: 13,
+    cursor: 'pointer',
   },
   docList: {
     display: 'flex',
@@ -417,6 +536,7 @@ const styles: Record<string, CSSProperties> = {
     lineHeight: 1,
     padding: '0 4px',
     flexShrink: 0,
+    cursor: 'pointer',
   },
   perforation: {
     width: 1,
@@ -527,5 +647,6 @@ const styles: Record<string, CSSProperties> = {
     padding: '0 22px',
     fontWeight: 600,
     fontSize: 14,
+    cursor: 'pointer',
   },
 }

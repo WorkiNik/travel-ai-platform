@@ -1,8 +1,9 @@
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload
+from app.core.limiter import limiter
 
 from app.db.database import get_db
 from app.models.user import User
@@ -17,6 +18,24 @@ from app.schemas.conversation import (
 from app.services.auth import get_current_user
 from app.services.ai import get_ai_response, stream_ai_response, AIServiceError
 from app.services.rag import build_context_block
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
+
+# Декоратор @limiter.limit задает жесткое ограничение: 5 запросов в минуту с одного IP
+@router.post("/{conv_id}/messages")
+@limiter.limit("5/minute")
+async def create_message(
+    request: Request, # ВАЖНО: slowapi требует, чтобы объект Request обязательно был в аргументах функции!
+    conv_id: int, 
+    message: MessageCreate
+):
+    # Здесь остается твоя логика обращения к Gemini / БД
+    return {"status": "Message processing started"}
+
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
@@ -65,7 +84,9 @@ async def get_conversation(
 
 
 @router.post("/{conv_id}/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
 async def add_message(
+    request: Request,
     conv_id: int,
     msg_in: MessageCreate,
     db: Session = Depends(get_db),
@@ -108,8 +129,10 @@ async def add_message(
     return assistant_message
 
 
-@router.post("/{conv_id}/messages/stream")
+@router.post("/{conv_id}/messages/stream", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
 async def add_message_stream(
+    request: Request,
     conv_id: int,
     msg_in: MessageCreate,
     db: Session = Depends(get_db),

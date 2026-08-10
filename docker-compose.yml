@@ -1,18 +1,16 @@
-
 services:
   postgres:
     image: pgvector/pgvector:pg15
     container_name: travel_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: dev123
-      POSTGRES_DB: travel_ai
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev -d travel_ai"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,8 +18,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: travel_redis
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     healthcheck:
@@ -33,12 +30,10 @@ services:
   minio:
     image: minio/minio:latest
     container_name: travel_minio
+    restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/minio_root
     command: minio server /minio_root --console-address ":9001"
@@ -51,17 +46,17 @@ services:
   backend:
     build: ./backend
     container_name: travel_backend
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://dev:dev123@postgres:5432/travel_ai
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
+      FRONTEND_URL: http://localhost
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL:-gemini-3.5-flash}
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-prod}
+      SECRET_KEY: ${SECRET_KEY}
       MINIO_URL: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,12 +66,45 @@ services:
   frontend:
     build: ./frontend
     container_name: travel_frontend
-    ports:
-      - "3000:80"
+    restart: unless-stopped
     depends_on:
       - backend
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: travel_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: travel_metabase
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase_app
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER}
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_DB_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy   
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  caddy_data:
+  caddy_config:

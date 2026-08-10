@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: '',  // относительный путь — работает через Caddy на любом домене/порту
   headers: {
     'Content-Type': 'application/json',
   },
@@ -68,7 +68,7 @@ export async function streamMessage(
 
   let response: Response
   try {
-    response = await fetch(`http://localhost:8000/conversations/${convId}/messages/stream`, {
+    response = await fetch(`/conversations/${convId}/messages/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -115,4 +115,22 @@ export async function streamMessage(
 
   
 
+}
+/**
+ * FastAPI возвращает detail как строку в обычных ошибках (HTTPException),
+ * но как массив объектов {type, loc, msg, ...} при 422-ошибках валидации Pydantic.
+ * Эта функция приводит оба случая к безопасной для рендера строке.
+ */
+export function extractErrorMessage(err: any, fallback: string): string {
+  const detail = err?.response?.data?.detail
+
+  if (typeof detail === 'string') {
+    return detail
+  }
+
+  if (Array.isArray(detail)) {
+    return detail.map((d: any) => d.msg || 'Ошибка валидации').join('; ')
+  }
+
+  return fallback
 }

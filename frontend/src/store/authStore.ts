@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { authApi } from '../services/api'
+import { authApi, extractErrorMessage } from '../services/api'
 
 interface AuthState {
   isAuthenticated: boolean
@@ -23,7 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('access_token', response.data.access_token)
       set({ isAuthenticated: true, isLoading: false })
     } catch (err: any) {
-      const message = err.response?.data?.detail || 'Не удалось войти. Проверьте данные.'
+      const message = extractErrorMessage(err, 'Не удалось войти. Проверьте данные.')
       set({ error: message, isLoading: false })
       throw err
     }
@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authApi.register(email, username, password)
       set({ isLoading: false })
     } catch (err: any) {
-      const message = err.response?.data?.detail || 'Не удалось зарегистрироваться.'
+      const message = extractErrorMessage(err, 'Не удалось зарегистрироваться.')
       set({ error: message, isLoading: false })
       throw err
     }
