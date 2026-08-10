@@ -6,9 +6,8 @@ from app.models.document import Document, DocumentChunk, EMBEDDING_DIM
 
 logger = logging.getLogger(__name__)
 
-# Инициализируем локальную модель. При первом запуске она скачает веса (~120 Мб)
-# intfloat/multilingual-e5-small отлично работает с русским языком.
-embedding_model = TextEmbedding(model_name="intfloat/multilingual-e5-small")
+# Инициализируем локальную модель.
+embedding_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
 def chunk_text(text: str, max_chars: int = 800) -> list[str]:
     """
