@@ -85,6 +85,13 @@ services:
       - frontend
       - backend
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: travel_ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama    
+
   metabase:
     image: metabase/metabase:latest
     container_name: travel_metabase
@@ -105,6 +112,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  ollama_data:
   minio_data:
   caddy_data:
   caddy_config:
