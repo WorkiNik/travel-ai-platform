@@ -2,7 +2,7 @@
 
 > AI-powered travel assistant with retrieval-augmented generation (RAG), built as a full-stack portfolio project to explore the technical foundations of AI product development.
 
-[![CI](https://github.com/YOUR_USERNAME/travel-ai-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/travel-ai-platform/actions/workflows/ci.yml)
+[![CI](https://github.com/WorkiNik/travel-ai-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/WorkiNik/travel-ai-platform/actions/workflows/ci.yml)
 
 ---
 
@@ -77,7 +77,7 @@ User message
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/travel-ai-platform.git
+git clone https://github.com/WorkiNik/travel-ai-platform.git
 cd travel-ai-platform
 
 # Add your own Gemini API key (free tier: https://aistudio.google.com/apikey)
@@ -87,8 +87,8 @@ docker-compose up --build
 ```
 
 Then open:
-- **App:** http://localhost:3000
-- **API docs (Swagger):** http://localhost:8000/docs
+- **App:** http://localhost
+- **API docs (Swagger):** http://localhost/docs
 - **MinIO console:** http://localhost:9001
 
 ---
@@ -156,4 +156,4 @@ poetry run pytest -v
 
 ---
 
-*Built by [Your Name] — [LinkedIn] · [Portfolio]*
+*Built by [Ishkov Nikita] — [https://www.linkedin.com/in/nikita-ishkov] · [portfolio.inproject.my]*
