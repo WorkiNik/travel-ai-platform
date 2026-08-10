@@ -1,15 +1,14 @@
 import logging
-
-from google.genai import types, errors
 from sqlalchemy.orm import Session
+from fastembed import TextEmbedding
 
 from app.models.document import Document, DocumentChunk, EMBEDDING_DIM
-from app.services.ai import client
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_MODEL = "gemini-embedding-001"
-
+# Инициализируем локальную модель. При первом запуске она скачает веса (~120 Мб)
+# intfloat/multilingual-e5-small отлично работает с русским языком.
+embedding_model = TextEmbedding(model_name="intfloat/multilingual-e5-small")
 
 def chunk_text(text: str, max_chars: int = 800) -> list[str]:
     """
@@ -37,19 +36,17 @@ def chunk_text(text: str, max_chars: int = 800) -> list[str]:
 
 async def embed_text(text: str) -> list[float]:
     try:
-        result = await client.aio.models.embed_content(
-            model=EMBEDDING_MODEL,
-            contents=text,
-            config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIM),
-        )
-        return result.embeddings[0].values
-    except errors.APIError as e:
-        logger.error(f"Embedding error [{e.code}]: {e.message}")
+        # fastembed.embed возвращает генератор, конвертируем первый результат в список
+        embeddings_generator = embedding_model.embed([text])
+        first_embedding = next(embeddings_generator).tolist()
+        return first_embedding
+    except Exception as e:
+        logger.error(f"Embedding error: {e}")
         raise
 
 
 async def index_document(db: Session, document: Document, content: str) -> int:
-    """Режет документ на чанки, эмбеддит каждый и сохраняет в БД. Возвращает число чанков."""
+    """Режет документ на чанки, эмбеддит каждый и сохраняет в БД."""
     chunks = chunk_text(content)
     for idx, chunk in enumerate(chunks):
         embedding = await embed_text(chunk)

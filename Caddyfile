@@ -1,10 +1,15 @@
 inproject.my {
+    # Включаем сжатие трафика для ускорения загрузки сайта
+    encode gzip zstd
+
+    # Направляем запросы к API и документации FastAPI на бэкенд
     @backend path /auth/* /conversations/* /documents/* /docs* /openapi.json*
 
     handle @backend {
         reverse_proxy backend:8000
     }
 
+    # Все остальные запросы отдаем фронтенду (интерфейс)
     handle {
         reverse_proxy frontend:80
     }

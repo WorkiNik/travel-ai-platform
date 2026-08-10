@@ -6,7 +6,7 @@ from pgvector.sqlalchemy import Vector
 
 from app.db.database import Base
 
-EMBEDDING_DIM = 768
+EMBEDDING_DIM = 384
 
 
 class Document(Base):
