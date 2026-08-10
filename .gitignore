@@ -1,0 +1,18 @@
+# Среда и секреты
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Логи и базы
+*.log
+*.sqlite3
+
+# Node.js
+node_modules/
+dist/
+build/
+.DS_Store
